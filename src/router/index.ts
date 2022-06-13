@@ -4,21 +4,16 @@ import VueRouter, { RouteConfig } from 'vue-router';
 Vue.use(VueRouter);
 
 const routes: Array<RouteConfig> = [
-    /* {
-        path: '/',
-        name: 'Home',
-        component: Home,
-    }, */
     {
         path: '/',
         name: 'Dashboard',
         component: () => import('../views/Dashboard.vue'),
     },
-    /* {
-        path: '/about',
-        name: 'About',
-        component: () => import('../views/About.vue'),
-    }, */
+    {
+        path: '/shopping',
+        name: 'NewShopping',
+        component: () => import('../views/NewShopping.vue'),
+    },
 ];
 
 const router = new VueRouter({

@@ -1,6 +1,8 @@
 <template>
     <div class="wrapper">
-        <button>Új vásárlás</button>
+        <b-button @click="$router.push({ name: 'NewShopping' })">
+            Új vásárlás
+        </b-button>
         <b-table
             id="table"
             class="table"
@@ -54,6 +56,29 @@
             limit="5"
             @change="fetchPageablePurchases($event)"
         />
+        <b-button v-b-modal.export-modal variant="primary">Export</b-button>
+        <b-modal id="export-modal" class="modal" hide-footer hide-header>
+            <b-form-row>
+                <b-col cols="8"> <b-form-input v-model="fileName" /> </b-col>
+                <b-col>
+                    <b-form-select
+                        v-model="selectedFileFormat"
+                        :options="selectableFileFormats"
+                    />
+                </b-col>
+            </b-form-row>
+
+            <b-form-row class="mt-3">
+                <b-col>
+                    <b-button @click="onExport" class="w-100">
+                        Export
+                    </b-button>
+                </b-col>
+                <b-col>
+                    <b-button @click="onClose" class="w-100"> Bezár </b-button>
+                </b-col>
+            </b-form-row>
+        </b-modal>
     </div>
 </template>
 <script lang="ts">
@@ -63,6 +88,7 @@ import Pageable from '@/model/Pageable';
 import { Purchase } from '@/model/Purchase';
 import { Component, Vue } from 'vue-property-decorator';
 import { mapActions, mapGetters } from 'vuex';
+import exportFromJSON from 'export-from-json';
 
 @Component({
     components: {
@@ -87,6 +113,12 @@ export default class Dashboard extends Vue {
 
     purchases!: Pageable<Purchase> | null;
 
+    fileName = '';
+
+    selectableFileFormats = ['csv', 'xls'];
+
+    selectedFileFormat = 'csv';
+
     fetchPageablePurchases!: (page: number) => Promise<void>;
 
     deletePurchaseById!: (id: number) => Promise<void>;
@@ -97,6 +129,23 @@ export default class Dashboard extends Vue {
                 this.fetchPageablePurchases(this.purchases.currentPage);
             }
         });
+    }
+
+    onClose() {
+        this.$bvModal.hide('export-modal');
+    }
+
+    onExport() {
+        exportFromJSON({
+            data: this.purchases?.items ?? [],
+            fileName: this.fileName,
+            exportType:
+                this.selectedFileFormat === 'csv'
+                    ? exportFromJSON.types.csv
+                    : exportFromJSON.types.xls,
+            withBOM: true,
+        });
+        this.$bvModal.hide('export-modal');
     }
 
     get getTableFields(): Array<any> {
