@@ -1,0 +1,22 @@
+$theme-colors: (
+    'primary': #6D5BD0,
+    'background-parent': #F2F0F9,
+    'background-primary': white,
+    'background-stripe': #F4F2FF,
+    'font-primary': #25213B,
+    'font-primary-variant': #6E6893,
+    'font-primary-icon': #8B83BA,
+    'font-stroke': #C6C2DE,
+    'font-positive': #007F00,
+    'font-negative': #D30000,
+    'font-positive-bg': #CDFFCD,
+    'font-negative-bg': #FFE0E0,
+);
+
+
+// EZ A KETTŐ MINDENKÉPP AZ UTOLSÓ LEGYEN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+// Bootstrap and its default variables
+@import 'node_modules/bootstrap/scss/bootstrap';
+// BootstrapVue and its default variables
+@import 'node_modules/bootstrap-vue/src/index.scss';
