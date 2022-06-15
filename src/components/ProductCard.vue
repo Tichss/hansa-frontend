@@ -5,43 +5,43 @@
         </div>
         <div class="details">
             <div>
-                <strong>Termék neve:</strong>
-                {{ purchaseProduct?.product.name }}
+                <strong>{{ product?.name }}</strong>
             </div>
             <div>
-                <strong>Mennyiség: </strong>
-                {{ purchaseProduct?.amount }}
-                {{ purchaseProduct?.product.amountUnit }}
+                <strong>{{ Math.round(product?.price) }} Ft</strong>/{{
+                    product.amountUnit
+                }}
+                (bruttó)
             </div>
             <div>
                 <strong>Vonalkód: </strong>
-                {{ purchaseProduct?.product.barCode }}
-            </div>
-            <div>
-                <strong>Ár(bruttó): </strong> {{ purchaseProduct?.priceBrutto }}
+                {{ product.barCode }}
             </div>
         </div>
     </div>
 </template>
 <script lang="ts">
-import { PurchaseProduct } from '@/model/PurchaseProduct';
+import { Product } from '@/model/Product';
 import { Component, Prop, Vue } from 'vue-property-decorator';
 
 @Component
 export default class ProductCard extends Vue {
-    @Prop() purchaseProduct!: PurchaseProduct;
+    @Prop() product!: Product;
 }
 </script>
 <style lang="scss" scoped>
 .card-costume {
-    width: 100%;
+    width: 150px;
+    min-height: 250px;
     display: flex;
+    flex-direction: column;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    background-color: white;
     .product-image {
-        border-radius: 10px;
-        height: 100px;
-        width: 100px;
-        -webkit-box-shadow: 0px 0px 19px -5px rgba(0, 0, 0, 0.5);
-        box-shadow: 0px 0px 19px -5px rgba(0, 0, 0, 0.5);
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: inherit;
         img {
             height: 100%;
             max-width: 100%;
@@ -51,10 +51,12 @@ export default class ProductCard extends Vue {
         }
     }
     .details {
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-        justify-content: space-between;
+        padding: 10px;
+        font-size: 12px;
+
+        .shop-name {
+            font-size: 14px;
+        }
     }
 }
 </style>

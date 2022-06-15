@@ -107,7 +107,7 @@
     </div>
 </template>
 <script lang="ts">
-import ProductCard from '@/components/ProductCard.vue';
+import ProductCard from '@/components/PurchaseProductCard.vue';
 import ShopCard from '@/components/ShopCard.vue';
 import Pageable from '@/model/Pageable';
 import { Purchase } from '@/model/Purchase';
@@ -227,6 +227,7 @@ export default class Dashboard extends Vue {
         .footer {
             background: #f4f2ff;
             .pagination-wrapper {
+                display: inline-block;
                 .pagination {
                     width: fit-content;
                 }
