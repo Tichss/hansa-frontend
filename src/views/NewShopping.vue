@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="wrapper">
         <h1>Bolt:</h1>
         <div class="shops-wrapper">
             <shop-card
@@ -27,29 +27,30 @@
                 src="@/assets/close-icon.svg"
                 @click="onClose"
             />
-            <b-form-row class="mt-3">
-                <product-card :product="selectedProduct" class="product-card" />
-                <b-form-spinbutton
-                    v-model="amount"
-                    min="1"
-                    max="12"
-                    vertical
-                ></b-form-spinbutton>
-                <b-col>
-                    <b-button class="w-100" @click="addToCart()">
-                        Kosárba
-                    </b-button>
-                </b-col>
-            </b-form-row>
+            <product-card
+                :product="selectedProduct"
+                class="product-card-modal"
+            />
+            <b-form-spinbutton
+                v-model="amount"
+                class="mt-3"
+                min="1"
+                max="12"
+            ></b-form-spinbutton>
+            <b-button class="w-100 mt-3" variant="primary" @click="addToCart()">
+                Kosárba
+            </b-button>
         </b-modal>
         <h1>Kosár:</h1>
-        <purchase-product-card
-            v-for="purchaseProduct in cart"
-            :key="purchaseProduct.id"
-            :purchase-product="purchaseProduct"
-            class="product-card"
-            @on-delete="deleteFromCart(purchaseProduct)"
-        />
+        <div class="cart-wrapper">
+            <purchase-product-card
+                v-for="purchaseProduct in cart"
+                :key="purchaseProduct.id"
+                :purchase-product="purchaseProduct"
+                class="product-card"
+                @on-delete="deleteFromCart(purchaseProduct)"
+            />
+        </div>
         <h1>Totál: {{ Math.round(total) }}</h1>
         <b-button @click="buy">Vásárlás</b-button>
     </div>
@@ -129,6 +130,7 @@ export default class NewShopping extends Vue {
         this.onClose();
         const purchaseProduct = {
             uuid: Math.random(),
+            partnerId: 2011068,
             product: this.selectedProduct,
             amount: this.amount,
             priceBrutto: this.selectedProduct!.price * this.amount,
@@ -136,7 +138,6 @@ export default class NewShopping extends Vue {
         this.cart.push(purchaseProduct);
     }
     deleteFromCart(purchaseProduct: PurchaseProduct) {
-        console.log(purchaseProduct);
         this.cart = this.cart.filter((item) => {
             return item.uuid !== purchaseProduct.uuid;
         });
@@ -150,10 +151,13 @@ export default class NewShopping extends Vue {
     }
 
     buy() {
+        this.cart.forEach((item) => {
+            delete item.uuid;
+        });
         const purchase = {
             price: this.total,
             cashRegisterId: 1,
-            partnerId: 1,
+            partnerId: 2011068,
             shop: this.selectedShop,
             purchaseProducts: this.cart,
         } as Purchase;
@@ -167,61 +171,86 @@ export default class NewShopping extends Vue {
                 this.$store.commit('locationsStorage/setError', error);
             })
             .finally(() => {
-                console.log(this.shops);
-                console.log(this.products);
                 this.loading = false;
             });
     }
 }
 </script>
 <style lang="scss" scoped>
-.shops-wrapper {
+.wrapper {
     margin: auto;
-    // border: 1px solid black;
-    width: 80%;
-    display: flex;
-    overflow: auto;
+    width: 60%;
+    .shops-wrapper {
+        margin: auto;
+        display: flex;
+        overflow: auto;
 
-    .selected-shop-card {
-        transition: transform 0.2s;
-        box-shadow: 0px 0px 20px var(--font-primary-variant);
-    }
-    .shop-card {
-        flex-shrink: 0;
-        margin: 10px;
-        cursor: pointer;
-        transition: transform 0.2s;
-        &:hover {
-            transform: scale(1.02);
+        .selected-shop-card {
+            transition: transform 0.2s;
+            box-shadow: 0px 0px 20px var(--font-primary-variant);
+        }
+        .shop-card {
+            flex-shrink: 0;
+            margin: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            &:hover {
+                transform: scale(1.02);
+            }
+        }
+        .product-card {
+            flex-shrink: 0;
+            margin: 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            &:hover {
+                transform: scale(1.02);
+            }
         }
     }
-    .product-card {
-        flex-shrink: 0;
-        margin: 20px;
-        cursor: pointer;
-        transition: transform 0.2s;
-        &:hover {
-            transform: scale(1.02);
+
+    .products-wrapper {
+        margin: auto;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-content: flex-start;
+        .product-card {
+            flex-shrink: 0;
+            margin: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            &:hover {
+                transform: scale(1.02);
+            }
+        }
+    }
+
+    .cart-wrapper {
+        margin: auto;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-content: flex-start;
+        .product-card {
+            flex-shrink: 0;
+            margin: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            &:hover {
+                transform: scale(1.02);
+            }
         }
     }
 }
 
-.products-wrapper {
+/deep/ #add-to-cart-modal___BV_modal_content_ {
+    width: 260px;
     margin: auto;
-    width: 85%;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-content: flex-start;
-    .product-card {
-        flex-shrink: 0;
-        margin: 10px;
-        cursor: pointer;
-        transition: transform 0.2s;
-        &:hover {
-            transform: scale(1.02);
-        }
-    }
+}
+
+.product-card-modal {
+    margin: auto;
 }
 .close-icon {
     cursor: pointer;

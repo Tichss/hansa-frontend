@@ -19,4 +19,12 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+
+body {
+    background: radial-gradient(
+        circle,
+        rgba(180, 193, 255, 1) 0%,
+        rgb(255, 255, 255) 100%
+    );
+}
 </style>

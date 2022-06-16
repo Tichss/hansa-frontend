@@ -1,7 +1,7 @@
 import { Product } from './Product';
 
 export type PurchaseProduct = {
-    uuid: number;
+    uuid?: number;
     id: number;
     product: Product;
     amount: number;

@@ -3,11 +3,14 @@
         <div class="table-wrapper">
             <div class="header">
                 <b-dropdown variant="primary">
-                    <template #button-content> Filter </template>
+                    <template #button-content>
+                        <b-icon-filter /> Filter
+                    </template>
                     <b-dropdown-item href="#">Action</b-dropdown-item>
                     <b-dropdown-item href="#">Another action</b-dropdown-item>
                 </b-dropdown>
                 <b-button @click="$router.push({ name: 'NewShopping' })">
+                    <b-icon-plus />
                     Új vásárlás
                 </b-button>
             </div>
@@ -17,6 +20,8 @@
                 :items="purchases?.items"
                 :fields="getTableFields"
                 small
+                sort-icon-left
+                responsive
             >
                 <template #table-busy>
                     <div class="text-center text-danger my-2">
@@ -28,21 +33,31 @@
                     {{ row.item.createdAt?.toLocaleString() }}
                 </template>
                 <template #cell(show_details)="row">
-                    <img
+                    <b-button
+                        :id="row.item.id"
                         v-show="!row.detailsShowing"
-                        :id="row.item.id"
+                        variant="primary"
                         v-b-toggle="'collapse' + row.item.id"
-                        src="@/assets/arrow_down.svg"
                         @click="row.toggleDetails"
-                    />
-                    <img
+                    >
+                        <b-icon-chevron-down />
+                    </b-button>
+                    <b-button
+                        :id="row.item.id"
                         v-show="row.detailsShowing"
-                        :id="row.item.id"
+                        variant="primary"
                         v-b-toggle="'collapse' + row.item.id"
-                        src="@/assets/arrow_up.svg"
                         @click="row.toggleDetails"
-                    />
-                    <button @click="deleteOnClick(row.item.id)">Delete</button>
+                    >
+                        <b-icon-chevron-up />
+                    </b-button>
+                    <b-button
+                        variant="font-negative"
+                        @click="deleteOnClick(row.item.id)"
+                        class="ml-1"
+                    >
+                        <b-icon-trash />
+                    </b-button>
                 </template>
 
                 <template #row-details="row">
@@ -69,6 +84,7 @@
                     />
                 </div>
                 <b-button v-b-modal.export-modal variant="primary">
+                    <b-icon-download />
                     Export
                 </b-button>
                 <b-modal
@@ -82,9 +98,10 @@
                         src="@/assets/close-icon.svg"
                         @click="onClose"
                     />
-                    <b-form-row>
+                    <b-row align-v="end">
                         <b-col cols="8">
-                            <b-form-input v-model="fileName" />
+                            <label for="file-name">Fájl név:</label>
+                            <b-form-input id="file-name" v-model="fileName" />
                         </b-col>
                         <b-col>
                             <b-form-select
@@ -92,11 +109,16 @@
                                 :options="selectableFileFormats"
                             />
                         </b-col>
-                    </b-form-row>
+                    </b-row>
 
                     <b-form-row class="mt-3">
                         <b-col>
-                            <b-button @click="onExport" class="w-100">
+                            <b-button
+                                @click="onExport"
+                                class="w-100"
+                                variant="primary"
+                            >
+                                <b-icon-download />
                                 Export
                             </b-button>
                         </b-col>
@@ -114,6 +136,7 @@ import { Purchase } from '@/model/Purchase';
 import { Component, Vue } from 'vue-property-decorator';
 import { mapActions, mapGetters } from 'vuex';
 import exportFromJSON from 'export-from-json';
+import cloneDeep from 'lodash.clonedeep';
 
 @Component({
     components: {
@@ -161,14 +184,22 @@ export default class Dashboard extends Vue {
     }
 
     onExport() {
+        let exportData;
+        if (this.purchases?.items) {
+            exportData = cloneDeep(this.purchases?.items) as Array<any>;
+            exportData.forEach((element) => {
+                delete element.purchaseProducts;
+                element.shop = element.shop.name;
+                element.createdAt = element.createdAt.toISOString();
+            });
+        }
         exportFromJSON({
-            data: this.purchases?.items ?? [],
+            data: exportData ?? [],
             fileName: this.fileName,
             exportType:
                 this.selectedFileFormat === 'csv'
                     ? exportFromJSON.types.csv
                     : exportFromJSON.types.xls,
-            withBOM: true,
         });
         this.$bvModal.hide('export-modal');
     }
@@ -178,18 +209,27 @@ export default class Dashboard extends Vue {
             {
                 key: 'id',
                 label: 'Id',
+                sortable: true,
             },
             {
                 key: 'createdAt',
                 label: 'Időpont',
+                sortable: true,
+            },
+            {
+                key: 'price',
+                label: 'Végösszeg',
+                sortable: true,
             },
             {
                 key: 'cashRegisterId',
                 label: 'Pénztárgép azonosító',
+                sortable: true,
             },
             {
                 key: 'shop.name',
                 label: 'Bolt',
+                sortable: true,
             },
             {
                 key: 'show_details',
@@ -202,7 +242,6 @@ export default class Dashboard extends Vue {
         this.loading = true;
         this.fetchPageablePurchases(1).finally(() => {
             this.loading = false;
-            console.log(this.purchases?.items[0]);
         });
     }
 }
@@ -212,73 +251,80 @@ export default class Dashboard extends Vue {
 .wrapper {
     margin: auto;
     width: 80%;
-    max-width: 800px;
+    max-width: 1200px;
     .table-wrapper {
-        background: #ffffff;
+        margin: 30px 0;
         box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
         border-radius: 8px;
         overflow: hidden;
 
         .header {
+            display: flex;
+            justify-content: space-between;
             padding: 15px 20px;
             border-bottom: 1px solid #d9d5ec;
         }
 
         .footer {
-            background: #f4f2ff;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             .pagination-wrapper {
+                margin-right: 15px;
                 display: inline-block;
                 .pagination {
                     width: fit-content;
                 }
             }
         }
-    }
-    .table {
-        margin-bottom: 0;
-        $tabble_padding: 15px;
-        /deep/ th {
-            font-style: normal;
-            font-weight: 600;
-            font-size: 12px;
-            line-height: 15px;
-            text-transform: uppercase;
-            color: var(--font-primary-variant);
-            background: var(--background-stripe);
-            border-bottom: unset;
 
-            height: 40px;
-            vertical-align: middle !important;
-            border-top: unset;
-            white-space: nowrap;
-            overflow: hidden;
-            &:first-child {
-                padding-left: $tabble_padding;
-            }
+        .table {
+            margin-bottom: 0;
+            $tabble_padding: 20px;
+            /deep/ th {
+                font-style: normal;
+                font-weight: 600;
+                font-size: 16px;
+                line-height: 15px;
+                text-transform: uppercase;
+                color: var(--font-primary-variant);
+                background: var(--background-stripe);
+                border-bottom: unset;
 
-            &:last-child {
-                padding-right: $tabble_padding;
-                width: 1%;
+                height: 40px;
+                vertical-align: middle !important;
+                border-top: unset;
                 white-space: nowrap;
-            }
-        }
+                overflow: hidden;
+                &:first-child {
+                    padding-left: $tabble_padding;
+                }
 
-        /deep/ td {
-            font-size: 12px;
-            font-weight: 500;
-            background: white;
-            color: #6e6893;
-            vertical-align: middle;
-            min-height: 77px;
-            white-space: nowrap;
-
-            &:first-child {
-                padding-left: $tabble_padding;
+                &:last-child {
+                    padding-right: $tabble_padding;
+                    width: 1%;
+                    white-space: nowrap;
+                }
             }
 
-            &:last-child {
-                padding-right: $tabble_padding;
-                width: 1%;
+            /deep/ td {
+                font-size: 14px;
+                font-weight: 500;
+                background: white;
+                color: #6e6893;
+                vertical-align: middle;
+                min-height: 77px;
+                white-space: nowrap;
+
+                &:first-child {
+                    padding-left: $tabble_padding;
+                }
+
+                &:last-child {
+                    padding-right: $tabble_padding;
+                    width: 1%;
+                }
             }
         }
     }
