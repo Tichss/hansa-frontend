@@ -35,6 +35,20 @@ export default class PurchaseStorage extends VuexModule {
     }
 
     @Action
+    addPurchase(purchase: Purchase): Promise<void> {
+        return apiClient
+            .post<Purchase>('/purchases', {
+                purchase,
+            })
+            .then(() => {
+                return Promise.resolve();
+            })
+            .catch(() => {
+                return Promise.reject();
+            });
+    }
+
+    @Action
     deletePurchaseById(id: number): Promise<void> {
         return apiClient
             .delete(`/purchases/${id}`)

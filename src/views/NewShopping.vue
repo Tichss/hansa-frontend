@@ -28,8 +28,15 @@
                 @click="onClose"
             />
             <b-form-row class="mt-3">
+                <product-card :product="selectedProduct" class="product-card" />
+                <b-form-spinbutton
+                    v-model="amount"
+                    min="1"
+                    max="12"
+                    vertical
+                ></b-form-spinbutton>
                 <b-col>
-                    <b-button class="w-100" @click="addToCart(1)">
+                    <b-button class="w-100" @click="addToCart()">
                         Kosárba
                     </b-button>
                 </b-col>
@@ -41,7 +48,10 @@
             :key="purchaseProduct.id"
             :purchase-product="purchaseProduct"
             class="product-card"
+            @on-delete="deleteFromCart(purchaseProduct)"
         />
+        <h1>Totál: {{ Math.round(total) }}</h1>
+        <b-button @click="buy">Vásárlás</b-button>
     </div>
 </template>
 <script lang="ts">
@@ -49,6 +59,7 @@ import ProductCard from '@/components/ProductCard.vue';
 import PurchaseProductCard from '@/components/PurchaseProductCard.vue';
 import ShopCard from '@/components/ShopCard.vue';
 import { Product } from '@/model/Product';
+import { Purchase } from '@/model/Purchase';
 import { PurchaseProduct } from '@/model/PurchaseProduct';
 import { Shop } from '@/model/Shop';
 import { Component, Vue } from 'vue-property-decorator';
@@ -64,6 +75,7 @@ import { mapActions, mapGetters } from 'vuex';
         ...mapActions({
             fetchShops: 'shopStorage/fetchShops',
             fetchProducts: 'productStorage/fetchProducts',
+            addPurchase: 'purchaseStorage/addPurchase',
         }),
     },
 
@@ -87,9 +99,13 @@ export default class NewShopping extends Vue {
 
     cart: Array<PurchaseProduct> = [];
 
+    amount = 1;
+
     fetchShops!: () => Promise<void>;
 
     fetchProducts!: () => Promise<void>;
+
+    addPurchase!: (purchase: Purchase) => Promise<void>;
 
     setSelectedShop(shop: Shop): void {
         this.selectedShop = shop;
@@ -100,6 +116,7 @@ export default class NewShopping extends Vue {
     }
 
     addToCartModal(product: Product) {
+        this.amount = 1;
         this.setSelectedProduct(product);
         this.$bvModal.show('add-to-cart-modal');
     }
@@ -111,11 +128,36 @@ export default class NewShopping extends Vue {
     addToCart(amount: number) {
         this.onClose();
         const purchaseProduct = {
+            uuid: Math.random(),
             product: this.selectedProduct,
-            amount,
-            priceBrutto: this.selectedProduct!.price * amount,
+            amount: this.amount,
+            priceBrutto: this.selectedProduct!.price * this.amount,
         } as PurchaseProduct;
         this.cart.push(purchaseProduct);
+    }
+    deleteFromCart(purchaseProduct: PurchaseProduct) {
+        console.log(purchaseProduct);
+        this.cart = this.cart.filter((item) => {
+            return item.uuid !== purchaseProduct.uuid;
+        });
+    }
+
+    get total() {
+        if (this.cart.length === 0) return 0;
+        return this.cart
+            .map((purchaseProduct) => purchaseProduct.priceBrutto)
+            .reduce((prev, next) => prev + next);
+    }
+
+    buy() {
+        const purchase = {
+            price: this.total,
+            cashRegisterId: 1,
+            partnerId: 1,
+            shop: this.selectedShop,
+            purchaseProducts: this.cart,
+        } as Purchase;
+        this.addPurchase(purchase);
     }
 
     mounted(): void {
@@ -170,6 +212,7 @@ export default class NewShopping extends Vue {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    align-content: flex-start;
     .product-card {
         flex-shrink: 0;
         margin: 10px;
