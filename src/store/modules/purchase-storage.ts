@@ -7,6 +7,8 @@ import { Action, Module, Mutation, VuexModule } from 'vuex-module-decorators';
 export default class PurchaseStorage extends VuexModule {
     purchases: Pageable<Purchase> | null = null;
 
+    purchase: Purchase | null = null;
+
     @Mutation
     setPurchases(purchases: Pageable<Purchase> | null): void {
         if (purchases) {
@@ -17,6 +19,16 @@ export default class PurchaseStorage extends VuexModule {
             });
         }
         this.purchases = purchases;
+    }
+
+    @Mutation
+    setPurchase(purchase: Purchase | null): void {
+        if (purchase) {
+            if (purchase.createdAt) {
+                purchase.createdAt = new Date(purchase.createdAt);
+            }
+        }
+        this.purchase = purchase;
     }
 
     @Action
@@ -32,7 +44,18 @@ export default class PurchaseStorage extends VuexModule {
                 this.context.commit('setPurchases', data);
             })
             .catch(() => {
-                // this.context.commit('setError', error);
+                return Promise.reject();
+            });
+    }
+
+    @Action
+    fetchPurchaseById(id: number): Promise<void> {
+        return apiClient
+            .get<number, Purchase>(`/purchases/${id}`)
+            .then((data: Purchase) => {
+                this.context.commit('setPurchase', data);
+            })
+            .catch(() => {
                 return Promise.reject();
             });
     }
@@ -41,6 +64,18 @@ export default class PurchaseStorage extends VuexModule {
     addPurchase(purchase: Purchase): Promise<void> {
         return apiClient
             .post<Purchase>('/purchases', purchase)
+            .then(() => {
+                return Promise.resolve();
+            })
+            .catch(() => {
+                return Promise.reject();
+            });
+    }
+
+    @Action
+    updatePurchase(purchase: Purchase): Promise<void> {
+        return apiClient
+            .put<Purchase>('/purchases', purchase)
             .then(() => {
                 return Promise.resolve();
             })
@@ -64,5 +99,9 @@ export default class PurchaseStorage extends VuexModule {
 
     get getPurchases(): Pageable<Purchase> | null {
         return this.purchases;
+    }
+
+    get getPurchase(): Purchase | null {
+        return this.purchase;
     }
 }

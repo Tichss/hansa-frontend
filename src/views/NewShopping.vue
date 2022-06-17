@@ -3,14 +3,16 @@
         <div class="shop-wrapper">
             <div class="header">
                 Válassz egy boltot ahol a vásárlást rögzítjük
-                <div class="little-circle">{{ shops.length }}</div>
+                <div class="little-circle">{{ shops?.length }}</div>
             </div>
             <div class="shops-list">
                 <shop-card
                     v-for="shop in shops"
                     :key="shop.id"
                     :shop="shop"
-                    :class="{ 'selected-shop-card': selectedShop == shop }"
+                    :class="{
+                        'selected-shop-card': selectedShop?.id == shop.id,
+                    }"
                     class="shop-card"
                     @click.native="setSelectedShop(shop)"
                 />
@@ -19,7 +21,7 @@
         <div class="product-wrapper">
             <div class="header">
                 Válassz termékeket a Kosárba
-                <div class="little-circle">{{ products.length }}</div>
+                <div class="little-circle">{{ products?.length }}</div>
             </div>
 
             <div class="products-list">
@@ -66,7 +68,8 @@
                 <span>Kosár Tartalma</span>
                 <strong> {{ Math.round(total) }} Ft </strong>
                 <b-button @click="buy" variant="primary">
-                    {{ cart.length > 0 ? cart.length : '' }} Vásárlás
+                    {{ cart?.length > 0 ? cart?.length : '' }}
+                    {{ this.$route.params.id ? 'Update' : 'Vásárlás' }}
                 </b-button>
             </div>
             <div class="cart-list">
@@ -104,6 +107,8 @@ import { mapActions, mapGetters } from 'vuex';
             fetchShops: 'shopStorage/fetchShops',
             fetchProducts: 'productStorage/fetchProducts',
             addPurchase: 'purchaseStorage/addPurchase',
+            updatePurchase: 'purchaseStorage/updatePurchase',
+            fetchPurchaseById: 'purchaseStorage/fetchPurchaseById',
         }),
     },
 
@@ -111,6 +116,7 @@ import { mapActions, mapGetters } from 'vuex';
         ...mapGetters({
             shops: 'shopStorage/getShops',
             products: 'productStorage/getProducts',
+            purchase: 'purchaseStorage/getPurchase',
         }),
     },
 })
@@ -120,6 +126,8 @@ export default class NewShopping extends Vue {
     shops!: Array<Shop> | null;
 
     products!: Array<Product> | null;
+
+    purchase!: Purchase | null;
 
     selectedShop: Shop | null = null;
 
@@ -133,9 +141,13 @@ export default class NewShopping extends Vue {
 
     fetchProducts!: () => Promise<void>;
 
+    fetchPurchaseById!: (id: number) => Promise<void>;
+
     addPurchase!: (purchase: Purchase) => Promise<void>;
 
-    setSelectedShop(shop: Shop): void {
+    updatePurchase!: (purchase: Purchase) => Promise<void>;
+
+    setSelectedShop(shop: Shop | null): void {
         this.selectedShop = shop;
     }
 
@@ -188,13 +200,26 @@ export default class NewShopping extends Vue {
             shop: this.selectedShop,
             purchaseProducts: this.cart,
         } as Purchase;
-        this.addPurchase(purchase);
+        if (this.$route.params.id) {
+            purchase.id = +this.$route.params.id;
+            this.updatePurchase(purchase);
+        } else {
+            this.addPurchase(purchase);
+        }
         this.$router.push({ name: 'Dashboard' });
     }
 
     mounted(): void {
         this.loading = true;
         Promise.all([this.fetchShops(), this.fetchProducts()])
+            .then(() => {
+                if (this.$route.params.id) {
+                    this.fetchPurchaseById(+this.$route.params.id).then(() => {
+                        this.setSelectedShop(this.purchase?.shop ?? null);
+                        this.cart = this.purchase?.purchaseProducts ?? [];
+                    });
+                }
+            })
             .catch((error) => {
                 this.$store.commit('locationsStorage/setError', error);
             })
@@ -208,6 +233,7 @@ export default class NewShopping extends Vue {
 .wrapper {
     margin: auto;
     width: 60%;
+    max-width: 850px;
     padding: 30px 0;
     .header {
         padding: 15px 20px;
@@ -233,7 +259,6 @@ export default class NewShopping extends Vue {
         overflow: hidden;
 
         .shops-list {
-            padding: 20px 0;
             display: flex;
             overflow: auto;
             background: white;
@@ -265,7 +290,6 @@ export default class NewShopping extends Vue {
             margin: auto;
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
             align-content: flex-start;
             overflow: auto;
             .product-card {

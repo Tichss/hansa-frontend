@@ -77,6 +77,18 @@
                         <b-icon-chevron-up />
                     </b-button>
                     <b-button
+                        @click="
+                            $router.push({
+                                name: 'NewShopping',
+                                params: { id: row.item.id },
+                            })
+                        "
+                        class="ml-1"
+                        variant="primary"
+                    >
+                        <b-icon-pen />
+                    </b-button>
+                    <b-button
                         @click="deleteOnClick(row.item.id)"
                         class="ml-1"
                         variant="font-negative"

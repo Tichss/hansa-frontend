@@ -10,7 +10,7 @@ const routes: Array<RouteConfig> = [
         component: () => import('../views/Dashboard.vue'),
     },
     {
-        path: '/shopping',
+        path: '/shopping/:id?',
         name: 'NewShopping',
         component: () => import('../views/NewShopping.vue'),
     },
