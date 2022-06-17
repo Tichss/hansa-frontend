@@ -1,6 +1,7 @@
 <template>
     <div class="card-costume">
         <img
+            v-if="deletable"
             class="close-icon"
             src="@/assets/close-icon.svg"
             @click="onDelete(purchaseProduct)"
@@ -36,6 +37,8 @@ import { Component, Emit, Prop, Vue } from 'vue-property-decorator';
 export default class PurchaseProductCard extends Vue {
     @Prop() purchaseProduct!: PurchaseProduct;
 
+    @Prop({ type: Boolean, default: false }) deletable!: boolean;
+
     @Emit()
     onDelete(): PurchaseProduct {
         return this.purchaseProduct;
@@ -65,6 +68,7 @@ export default class PurchaseProductCard extends Vue {
         }
     }
     .details {
+        white-space: normal;
         padding: 10px;
         font-size: 12px;
 

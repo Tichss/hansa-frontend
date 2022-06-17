@@ -20,10 +20,13 @@ export default class PurchaseStorage extends VuexModule {
     }
 
     @Action
-    fetchPageablePurchases(page: number): Promise<void> {
+    fetchPageablePurchases(request: {
+        page: number;
+        orderMode: number;
+    }): Promise<void> {
         return apiClient
             .get<number, Pageable<Purchase>>('/purchases', {
-                params: { page },
+                params: { page: request.page, orderMode: request.orderMode },
             })
             .then((data: Pageable<Purchase>) => {
                 this.context.commit('setPurchases', data);
@@ -36,7 +39,6 @@ export default class PurchaseStorage extends VuexModule {
 
     @Action
     addPurchase(purchase: Purchase): Promise<void> {
-        console.log(purchase);
         return apiClient
             .post<Purchase>('/purchases', purchase)
             .then(() => {

@@ -1,58 +1,85 @@
 <template>
     <div class="wrapper">
-        <h1>Bolt:</h1>
-        <div class="shops-wrapper">
-            <shop-card
-                v-for="shop in shops"
-                :key="shop.id"
-                :shop="shop"
-                :class="{ 'selected-shop-card': selectedShop == shop }"
-                class="shop-card"
-                @click.native="setSelectedShop(shop)"
-            />
+        <div class="shop-wrapper">
+            <div class="header">
+                Válassz egy boltot ahol a vásárlást rögzítjük
+                <div class="little-circle">{{ shops.length }}</div>
+            </div>
+            <div class="shops-list">
+                <shop-card
+                    v-for="shop in shops"
+                    :key="shop.id"
+                    :shop="shop"
+                    :class="{ 'selected-shop-card': selectedShop == shop }"
+                    class="shop-card"
+                    @click.native="setSelectedShop(shop)"
+                />
+            </div>
         </div>
-        <h1>Termékek:</h1>
-        <div class="products-wrapper">
-            <product-card
-                v-for="product in products"
-                :key="product.id"
-                :product="product"
-                class="product-card"
-                @click.native="addToCartModal(product)"
-            />
+        <div class="product-wrapper">
+            <div class="header">
+                Válassz termékeket a Kosárba
+                <div class="little-circle">{{ products.length }}</div>
+            </div>
+
+            <div class="products-list">
+                <product-card
+                    v-for="product in products"
+                    :key="product.id"
+                    :product="product"
+                    class="product-card"
+                    @click.native="addToCartModal(product)"
+                />
+            </div>
+            <b-modal
+                id="add-to-cart-modal"
+                class="modal"
+                hide-footer
+                hide-header
+            >
+                <img
+                    class="close-icon"
+                    src="@/assets/close-icon.svg"
+                    @click="onClose"
+                />
+                <product-card
+                    :product="selectedProduct"
+                    class="product-card-modal"
+                />
+                <b-form-spinbutton
+                    v-model="amount"
+                    class="mt-3"
+                    min="1"
+                    max="12"
+                ></b-form-spinbutton>
+                <b-button
+                    class="w-100 mt-3"
+                    variant="primary"
+                    @click="addToCart()"
+                >
+                    Kosárba
+                </b-button>
+            </b-modal>
         </div>
-        <b-modal id="add-to-cart-modal" class="modal" hide-footer hide-header>
-            <img
-                class="close-icon"
-                src="@/assets/close-icon.svg"
-                @click="onClose"
-            />
-            <product-card
-                :product="selectedProduct"
-                class="product-card-modal"
-            />
-            <b-form-spinbutton
-                v-model="amount"
-                class="mt-3"
-                min="1"
-                max="12"
-            ></b-form-spinbutton>
-            <b-button class="w-100 mt-3" variant="primary" @click="addToCart()">
-                Kosárba
-            </b-button>
-        </b-modal>
-        <h1>Kosár:</h1>
         <div class="cart-wrapper">
-            <purchase-product-card
-                v-for="purchaseProduct in cart"
-                :key="purchaseProduct.id"
-                :purchase-product="purchaseProduct"
-                class="product-card"
-                @on-delete="deleteFromCart(purchaseProduct)"
-            />
+            <div class="header">
+                <span>Kosár Tartalma</span>
+                <strong> {{ Math.round(total) }} Ft </strong>
+                <b-button @click="buy" variant="primary">
+                    {{ cart.length > 0 ? cart.length : '' }} Vásárlás
+                </b-button>
+            </div>
+            <div class="cart-list">
+                <purchase-product-card
+                    v-for="purchaseProduct in cart"
+                    :key="purchaseProduct.id"
+                    :purchase-product="purchaseProduct"
+                    class="product-card"
+                    @on-delete="deleteFromCart(purchaseProduct)"
+                    deletable
+                />
+            </div>
         </div>
-        <h1>Totál: {{ Math.round(total) }}</h1>
-        <b-button @click="buy">Vásárlás</b-button>
     </div>
 </template>
 <script lang="ts">
@@ -162,6 +189,7 @@ export default class NewShopping extends Vue {
             purchaseProducts: this.cart,
         } as Purchase;
         this.addPurchase(purchase);
+        this.$router.push({ name: 'Dashboard' });
     }
 
     mounted(): void {
@@ -180,65 +208,98 @@ export default class NewShopping extends Vue {
 .wrapper {
     margin: auto;
     width: 60%;
-    .shops-wrapper {
-        margin: auto;
+    padding: 30px 0;
+    .header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #d9d5ec;
         display: flex;
-        overflow: auto;
+        align-items: center;
+        justify-content: space-between;
+    }
 
-        .selected-shop-card {
-            transition: transform 0.2s;
-            box-shadow: 0px 0px 20px var(--font-primary-variant);
-        }
-        .shop-card {
-            flex-shrink: 0;
-            margin: 10px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            &:hover {
-                transform: scale(1.02);
+    .little-circle {
+        background-color: var(--primary);
+        border-radius: 50%;
+        height: 25px;
+        width: 25px;
+        display: flex;
+        justify-content: center;
+        align-content: center;
+        color: white;
+    }
+    .shop-wrapper {
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        overflow: hidden;
+
+        .shops-list {
+            padding: 20px 0;
+            display: flex;
+            overflow: auto;
+            background: white;
+
+            .selected-shop-card {
+                transition: transform 0.2s;
+                box-shadow: 0px 0px 20px var(--font-primary-variant);
             }
-        }
-        .product-card {
-            flex-shrink: 0;
-            margin: 20px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            &:hover {
-                transform: scale(1.02);
+            .shop-card {
+                flex-shrink: 0;
+                margin: 10px;
+                cursor: pointer;
+                transition: transform 0.2s;
+                &:hover {
+                    transform: scale(1.02);
+                }
             }
         }
     }
 
-    .products-wrapper {
-        margin: auto;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-content: flex-start;
-        .product-card {
-            flex-shrink: 0;
-            margin: 10px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            &:hover {
-                transform: scale(1.02);
+    .product-wrapper {
+        margin-top: 30px;
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        overflow: hidden;
+
+        .products-list {
+            background: white;
+            margin: auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: flex-start;
+            overflow: auto;
+            .product-card {
+                flex-shrink: 0;
+                margin: 10px;
+                cursor: pointer;
+                transition: transform 0.2s;
+                &:hover {
+                    transform: scale(1.02);
+                }
             }
         }
     }
 
     .cart-wrapper {
-        margin: auto;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-content: flex-start;
-        .product-card {
-            flex-shrink: 0;
-            margin: 10px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            &:hover {
-                transform: scale(1.02);
+        margin-top: 30px;
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        overflow: hidden;
+
+        .cart-list {
+            margin: auto;
+            display: flex;
+            flex-wrap: wrap;
+            // justify-content: center;
+            background: white;
+            .product-card {
+                flex-shrink: 0;
+                margin: 10px;
+                cursor: pointer;
+                transition: transform 0.2s;
+                &:hover {
+                    transform: scale(1.02);
+                }
             }
         }
     }

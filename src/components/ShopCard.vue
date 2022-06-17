@@ -45,6 +45,7 @@ export default class ShopCard extends Vue {
     .details {
         padding: 10px;
         font-size: 12px;
+        white-space: normal;
 
         .shop-name {
             font-size: 14px;

@@ -2,14 +2,39 @@
     <div class="wrapper">
         <div class="table-wrapper">
             <div class="header">
-                <b-dropdown variant="primary">
+                <b-dropdown variant="outline-primary">
                     <template #button-content>
                         <b-icon-filter /> Filter
                     </template>
-                    <b-dropdown-item href="#">Action</b-dropdown-item>
-                    <b-dropdown-item href="#">Another action</b-dropdown-item>
+                    <b-dropdown-item @click="setOrderMode(1)">
+                        Legfrissebb
+                    </b-dropdown-item>
+                    <b-dropdown-item @click="setOrderMode(2)">
+                        Legrégebbi
+                    </b-dropdown-item>
+
+                    <b-dropdown-divider />
+
+                    <b-dropdown-item @click="setOrderMode(3)">
+                        Legdrágább
+                    </b-dropdown-item>
+                    <b-dropdown-item @click="setOrderMode(4)">
+                        Legolcsóbb
+                    </b-dropdown-item>
+
+                    <b-dropdown-divider />
+
+                    <b-dropdown-item @click="setOrderMode(5)">
+                        Bolt neve A-Z
+                    </b-dropdown-item>
+                    <b-dropdown-item @click="setOrderMode(6)">
+                        Bolt neve Z-A
+                    </b-dropdown-item>
                 </b-dropdown>
-                <b-button @click="$router.push({ name: 'NewShopping' })">
+                <b-button
+                    variant="primary"
+                    @click="$router.push({ name: 'NewShopping' })"
+                >
                     <b-icon-plus />
                     Új vásárlás
                 </b-button>
@@ -52,9 +77,9 @@
                         <b-icon-chevron-up />
                     </b-button>
                     <b-button
-                        variant="font-negative"
                         @click="deleteOnClick(row.item.id)"
                         class="ml-1"
+                        variant="font-negative"
                     >
                         <b-icon-trash />
                     </b-button>
@@ -64,11 +89,14 @@
                     <h2>Bolt:</h2>
                     <shop-card :shop="row.item.shop" />
                     <h2>Termékek:</h2>
-                    <product-card
-                        v-for="purchaseProduct in row.item.purchaseProducts"
-                        :key="purchaseProduct.id"
-                        :purchaseProduct="purchaseProduct"
-                    />
+                    <div class="purchase-product-wrapper">
+                        <purchase-product-card
+                            v-for="purchaseProduct in row.item.purchaseProducts"
+                            :key="purchaseProduct.id"
+                            class="purchase-product"
+                            :purchaseProduct="purchaseProduct"
+                        />
+                    </div>
                 </template>
             </b-table>
             <div class="footer">
@@ -79,7 +107,12 @@
                         :per-page="20"
                         aria-controls="table"
                         limit="5"
-                        @change="fetchPageablePurchases($event)"
+                        @change="
+                            fetchPageablePurchases({
+                                page: $event,
+                                orderMode: orderMode,
+                            })
+                        "
                         class="pagination m-0"
                     />
                 </div>
@@ -129,7 +162,7 @@
     </div>
 </template>
 <script lang="ts">
-import ProductCard from '@/components/PurchaseProductCard.vue';
+import PurchaseProductCard from '@/components/PurchaseProductCard.vue';
 import ShopCard from '@/components/ShopCard.vue';
 import Pageable from '@/model/Pageable';
 import { Purchase } from '@/model/Purchase';
@@ -141,7 +174,7 @@ import cloneDeep from 'lodash.clonedeep';
 @Component({
     components: {
         ShopCard,
-        ProductCard,
+        PurchaseProductCard,
     },
     methods: {
         ...mapActions({
@@ -167,14 +200,35 @@ export default class Dashboard extends Vue {
 
     selectedFileFormat = 'csv';
 
-    fetchPageablePurchases!: (page: number) => Promise<void>;
+    orderMode = 1;
+
+    fetchPageablePurchases!: (request: {
+        page: number;
+        orderMode: number;
+    }) => Promise<void>;
 
     deletePurchaseById!: (id: number) => Promise<void>;
+
+    setOrderMode(orderMode: number) {
+        this.orderMode = orderMode;
+        this.loading = true;
+        if (this.purchases) {
+            this.fetchPageablePurchases({
+                page: this.purchases.currentPage,
+                orderMode: this.orderMode,
+            }).finally(() => {
+                this.loading = false;
+            });
+        }
+    }
 
     deleteOnClick(id: number) {
         this.deletePurchaseById(id).then(() => {
             if (this.purchases) {
-                this.fetchPageablePurchases(this.purchases.currentPage);
+                this.fetchPageablePurchases({
+                    page: this.purchases.currentPage,
+                    orderMode: this.orderMode,
+                });
             }
         });
     }
@@ -240,7 +294,10 @@ export default class Dashboard extends Vue {
 
     mounted(): void {
         this.loading = true;
-        this.fetchPageablePurchases(1).finally(() => {
+        this.fetchPageablePurchases({
+            page: 1,
+            orderMode: this.orderMode,
+        }).finally(() => {
             this.loading = false;
         });
     }
@@ -282,6 +339,15 @@ export default class Dashboard extends Vue {
         .table {
             margin-bottom: 0;
             $tabble_padding: 20px;
+            .purchase-product-wrapper {
+                margin: auto;
+                display: flex;
+                flex-wrap: wrap;
+                .purchase-product {
+                    flex-shrink: 0;
+                    margin: 10px;
+                }
+            }
             /deep/ th {
                 font-style: normal;
                 font-weight: 600;
