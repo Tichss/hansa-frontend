@@ -177,9 +177,10 @@ export default class NewShopping extends Vue {
         this.cart.push(purchaseProduct);
     }
     deleteFromCart(purchaseProduct: PurchaseProduct) {
-        this.cart = this.cart.filter((item) => {
-            return item.uuid !== purchaseProduct.uuid;
-        });
+        this.cart.splice(
+            this.cart.findIndex((item) => item.uuid === purchaseProduct.uuid),
+            1,
+        );
     }
 
     get total() {
@@ -217,6 +218,9 @@ export default class NewShopping extends Vue {
                     this.fetchPurchaseById(+this.$route.params.id).then(() => {
                         this.setSelectedShop(this.purchase?.shop ?? null);
                         this.cart = this.purchase?.purchaseProducts ?? [];
+                        this.cart.forEach((item) => {
+                            item.uuid = Math.random();
+                        });
                     });
                 }
             })

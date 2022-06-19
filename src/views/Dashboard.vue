@@ -255,6 +255,8 @@ export default class Dashboard extends Vue {
             exportData = cloneDeep(this.purchases?.items) as Array<any>;
             exportData.forEach((element) => {
                 delete element.purchaseProducts;
+                // eslint-disable-next-line no-underscore-dangle
+                delete element._showDetails;
                 element.shop = element.shop.name;
                 element.createdAt = element.createdAt.toISOString();
             });
